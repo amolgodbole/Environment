@@ -1,0 +1,39 @@
+From the terminal
+
+sudo apt-get purge nova* keystone* glance* cinder* horizon* quantum*
+
+
+To drop the databases:
+mysql -u root -p
+On MySQL prompt:
+show databases;
+Delete each database related to openstack with:
+drop database DB_NAME;
+
+To change the IP configuraion:
+/etc/network/interfaces
+
+auto eth0
+iface eth0 inet static
+address 10.0.0.100
+netmask 255.255.255.0
+gateway 10.0.0.1
+
+
+To change the hostname
+/etc/hosts
+
+Rootlogins:
+
+
+By default, the SSH server denies password-based login for root. In /etc/ssh/sshd_config, change:
+
+PermitRootLogin without-password
+to
+
+PermitRootLogin yes
+And restart SSH:
+
+sudo service ssh restart
+Or, you can use SSH keys. If you don't have one, create one using ssh-keygen (stick to the default for the key, and skip the password if you feel like it). Then do sudo -s (or whatever your preferred method of becoming root is), and add an SSH key to /root/.ssh/authorized_keys:
+cat /home/user/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
