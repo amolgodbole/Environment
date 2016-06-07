@@ -1,0 +1,702 @@
+Get the list of dependencies of non-installed RPM packages
+
+apt-cache show <package>
+repoquery --requires --resolve <package>
+
+yum deplist <package>
+dnf repoquery --requires <package>
+
+For local RPM: rpm -qpR package_Name
+
+
+From: http://linux-training.be/sysadmin/index.html
+
+Most Linux distributions have a package management system with online repositories containing thousands of packages. This makes it very easy to install and remove applications, operating system components, documentation and much more.
+
+We first discuss the Debian package format .deb and its tools dpkg, apt-get and aptitude. This should be similar on Debian, Ubuntu, Mint and all derived distributions.
+
+Then we look at the Red Hat package format .rpm and its tools rpm and yum. This should be similar on Red Hat, Fedora, CentOS and all derived distributions.
+
+package terminology
+
+repository
+
+A lot of software and documentation for your Linux distribution is available as packages in one or more centrally distributed repositories. These packages in such a repository are tested and very easy to install (or remove) with a graphical or command line installer.
+
+.deb packages
+
+Debian, Ubuntu, Mint and all derivatives from Debian and Ubuntu use .deb packages. To manage software on these systems, you can use aptitude or apt-get, both these tools are a front end for dpkg.
+
+.rpm packages
+
+Red Hat, Fedora, CentOS, OpenSUSE, Mandriva, Red Flag and others use .rpm packages. The tools to manage software packages on these systems are yum and rpm.
+
+dependency
+
+Some packages need other packages to function. Tools like apt-get, aptitude and yum will install all dependencies you need. When using dpkg or rpm, or when building from source, you will need to install dependencies yourself.
+
+open source
+
+These repositories contain a lot of independent open source software. Often the source code is customized to integrate better with your distribution. Most distributions also offer this modified source code as a package in one or more source repositories.
+
+You are free to go to the project website itself (samba.org, apache.org, github.com, ...) an download the vanilla (= without the custom distribution changes) source code.
+
+GUI software management
+
+End users have several graphical applications available via the desktop (look for 'add/remove software' or something similar).
+
+Below a screenshot of Ubuntu Software Center running on Ubuntu 12.04. Graphical tools are not discussed in this book.
+
+
+deb package management
+
+about deb
+
+Most people use aptitude or apt-get to manage their Debian/Ubuntu family of Linux distributions. Both are a front end for dpkg and are themselves a back end for synaptic and other graphical tools.
+
+dpkg -l
+
+The low level tool to work with .deb packages is dpkg. Here you see how to obtain a list of all installed packages on a Debian server.
+
+root@debian6:~# dpkg -l | wc -l
+265
+Compare this to the same list on a Ubuntu Desktop computer.
+
+root@ubu1204~# dpkg -l | wc -l
+2527
+dpkg -l $package
+
+Here is an example on how to get information on an individual package. The ii at the beginning means the package is installed.
+
+root@debian6:~# dpkg -l rsync | tail -1 | tr -s  ' ' 
+ii rsync 3.0.7-2 fast remote file copy program (like rcp)
+dpkg -S
+
+You can find the package that installed a certain file on your computer with dpkg -S. This example shows how to find the package for three files on a typical Debian server.
+
+root@debian6:~# dpkg -S /usr/share/doc/tmux/ /etc/ssh/ssh_config /sbin/ifconfig 
+tmux: /usr/share/doc/tmux/
+openssh-client: /etc/ssh/ssh_config
+net-tools: /sbin/ifconfig
+dpkg -L
+
+You can also get a list of all files that are installed by a certain program. Below is the list for the tmux package.
+
+root@debian6:~# dpkg -L tmux
+/.
+/etc
+/etc/init.d
+/etc/init.d/tmux-cleanup
+/usr
+/usr/share
+/usr/share/lintian
+/usr/share/lintian/overrides
+/usr/share/lintian/overrides/tmux
+/usr/share/doc
+/usr/share/doc/tmux
+/usr/share/doc/tmux/TODO.gz
+/usr/share/doc/tmux/FAQ.gz
+/usr/share/doc/tmux/changelog.Debian.gz
+/usr/share/doc/tmux/NEWS.Debian.gz
+/usr/share/doc/tmux/changelog.gz
+/usr/share/doc/tmux/copyright
+/usr/share/doc/tmux/examples
+/usr/share/doc/tmux/examples/tmux.vim.gz
+/usr/share/doc/tmux/examples/h-boetes.conf
+/usr/share/doc/tmux/examples/n-marriott.conf
+/usr/share/doc/tmux/examples/screen-keys.conf
+/usr/share/doc/tmux/examples/t-williams.conf
+/usr/share/doc/tmux/examples/vim-keys.conf
+/usr/share/doc/tmux/NOTES
+/usr/share/man
+/usr/share/man/man1
+/usr/share/man/man1/tmux.1.gz
+/usr/bin
+/usr/bin/tmux
+dpkg
+
+You could use dpkg -i to install a package and dpkg -r to remove a package, but you'd have to manually keep track of dependencies. Using apt-get or aptitude is much easier.
+
+apt-get
+
+Debian has been using apt-get to manage packages since 1998. Today Debian and many Debian-based distributions still actively support apt-get, though some experts claim aptitude is better at handling dependencies than apt-get.
+
+Both commands use the same configuration files and can be used alternately; whenever you see apt-get in documentation, feel free to type aptitude.
+
+We will start with apt-get and discuss aptitude in the next section.
+
+apt-get update
+
+When typing apt-get update you are downloading the names, versions and short description of all packages available on all configured repositories for your system.
+
+In the example below you can see some repositories at the url be.archive.ubuntu.com because this computer was installed in Belgium. This url can be different for you.
+
+root@ubu1204~# apt-get update
+Ign http://be.archive.ubuntu.com precise InRelease
+Ign http://extras.ubuntu.com precise InRelease
+Ign http://security.ubuntu.com precise-security InRelease            
+Ign http://archive.canonical.com precise InRelease                                         
+Ign http://be.archive.ubuntu.com precise-updates InRelease                                 
+...
+Hit http://be.archive.ubuntu.com precise-backports/main Translation-en                                                             
+Hit http://be.archive.ubuntu.com precise-backports/multiverse Translation-en                                                       
+Hit http://be.archive.ubuntu.com precise-backports/restricted Translation-en                                                       
+Hit http://be.archive.ubuntu.com precise-backports/universe Translation-en                                                         
+Fetched 13.7 MB in 8s (1682 kB/s)                                                                                                  
+Reading package lists... Done
+root@mac~#
+Run apt-get update every time before performing other package operations.
+
+apt-get upgrade
+
+One of the nicest features of apt-get is that it allows for a secure update of all software currently installed on your computer with just one command.
+
+root@debian6:~# apt-get upgrade
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+root@debian6:~# 
+The above screenshot shows that all software is updated to the latest version available for my distribution.
+
+apt-get clean
+
+apt-get keeps a copy of downloaded packages in /var/cache/apt/archives, as can be seen in this screenshot.
+
+root@ubu1204~# ls /var/cache/apt/archives/ | head
+accountsservice_0.6.15-2ubuntu9.4_i386.deb
+apport_2.0.1-0ubuntu14_all.deb
+apport-gtk_2.0.1-0ubuntu14_all.deb
+apt_0.8.16~exp12ubuntu10.3_i386.deb
+apt-transport-https_0.8.16~exp12ubuntu10.3_i386.deb
+apt-utils_0.8.16~exp12ubuntu10.3_i386.deb
+bind9-host_1%3a9.8.1.dfsg.P1-4ubuntu0.4_i386.deb
+chromium-browser_20.0.1132.47~r144678-0ubuntu0.12.04.1_i386.deb
+chromium-browser-l10n_20.0.1132.47~r144678-0ubuntu0.12.04.1_all.deb
+chromium-codecs-ffmpeg_20.0.1132.47~r144678-0ubuntu0.12.04.1_i386.deb
+Running apt-get clean removes all .deb files from that directory.
+
+root@ubu1204~# apt-get clean
+root@ubu1204~# ls /var/cache/apt/archives/*.deb
+ls: cannot access /var/cache/apt/archives/*.deb: No such file or directory
+apt-cache search
+
+Use apt-cache search to search for availability of a package. Here we look for rsync.
+
+root@ubu1204~# apt-cache search rsync | grep ^rsync
+rsync - fast, versatile, remote (and local) file-copying tool
+rsyncrypto - rsync friendly encryption
+apt-get install
+
+You can install one or more applications by appending their name behind apt-get install. The screenshot shows how to install the rsync package.
+
+root@ubu1204~# apt-get install rsync
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following NEW packages will be installed:
+  rsync
+0 upgraded, 1 newly installed, 0 to remove and 8 not upgraded.
+Need to get 299 kB of archives.
+After this operation, 634 kB of additional disk space will be used.
+Get:1 http://be.archive.ubuntu.com/ubuntu/ precise/main rsync i386 3.0.9-1ubuntu1 [299 kB]
+Fetched 299 kB in 0s (740 kB/s)
+Selecting previously unselected package rsync.
+(Reading database ... 323649 files and directories currently installed.)
+Unpacking rsync (from .../rsync_3.0.9-1ubuntu1_i386.deb) ...
+Processing triggers for man-db ...
+Processing triggers for ureadahead ...
+Setting up rsync (3.0.9-1ubuntu1) ...
+ Removing any system startup links for /etc/init.d/rsync ...
+root@ubu1204~#
+apt-get remove
+
+You can remove one or more applications by appending their name behind apt-get remove. The screenshot shows how to remove the rsync package.
+
+root@ubu1204~# apt-get remove rsync
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following packages will be REMOVED:
+  rsync ubuntu-standard
+0 upgraded, 0 newly installed, 2 to remove and 8 not upgraded.
+After this operation, 692 kB disk space will be freed.
+Do you want to continue [Y/n]? 
+(Reading database ... 323681 files and directories currently installed.)
+Removing ubuntu-standard ...
+Removing rsync ...
+ * Stopping rsync daemon rsync                                                                                                                                                                 [ OK ] 
+Processing triggers for ureadahead ...
+Processing triggers for man-db ...
+root@ubu1204~#
+Note however that some configuration information is not removed.
+
+root@ubu1204~# dpkg -l rsync | tail -1 | tr -s ' ' 
+rc rsync 3.0.9-1ubuntu1 fast, versatile, remote (and local) file-copying tool
+apt-get purge
+
+You can purge one or more applications by appending their name behind apt-get purge. Purging will also remove all existing configuration files related to that application. The screenshot shows how to purge the rsync package.
+
+root@ubu1204~# apt-get purge rsync
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following packages will be REMOVED:
+  rsync*
+0 upgraded, 0 newly installed, 1 to remove and 8 not upgraded.
+After this operation, 0 B of additional disk space will be used.
+Do you want to continue [Y/n]? 
+(Reading database ... 323651 files and directories currently installed.)
+Removing rsync ...
+Purging configuration files for rsync ...
+Processing triggers for ureadahead ...
+root@ubu1204~#
+Note that dpkg has no information about a purged package, except that it is uninstalled and no configuration is left on the system.
+
+root@ubu1204~# dpkg -l rsync | tail -1 | tr -s ' ' 
+un rsync <none> (no description available)
+aptitude
+
+Most people use aptitude for package management on Debian, Mint and Ubuntu systems.
+
+To synchronize with the repositories.
+
+aptitude update
+To patch and upgrade all software to the latest version on Debian.
+
+aptitude upgrade
+To patch and upgrade all software to the latest version on Ubuntu and Mint.
+
+aptitude safe-upgrade
+To install an application with all dependencies.
+
+aptitude install $package
+To search the repositories for applications that contain a certain string in their name or description.
+
+aptitude search $string
+To remove an application.
+
+aptitude remove $package
+To remove an application and all configuration files.
+
+aptitude purge $package
+apt
+
+Both apt-get and aptitude use the same configuration information in /etc/apt/. Thus adding a repository for one of them, will automatically add it for both.
+
+/etc/apt/sources.list
+
+The resource list used by apt-get and aptitude is located in /etc/apt/sources.list. This file contains a list of http or ftp sources where packages for the distribution can be downloaded.
+
+This is what that list looks like on my Debian server.
+
+root@debian6:~# cat /etc/apt/sources.list
+deb http://ftp.be.debian.org/debian/ squeeze main
+deb-src http://ftp.be.debian.org/debian/ squeeze main
+
+deb http://security.debian.org/ squeeze/updates main
+deb-src http://security.debian.org/ squeeze/updates main
+
+# squeeze-updates, previously known as 'volatile'
+deb http://ftp.be.debian.org/debian/ squeeze-updates main
+deb-src http://ftp.be.debian.org/debian/ squeeze-updates main
+On my Ubuntu there are four times as many online repositories in use.
+
+root@ubu1204~# wc -l /etc/apt/sources.list
+63 /etc/apt/sources.list
+There is much more to learn about apt, explore commands like add-apt-repository, apt-key and apropos apt.
+
+rpm
+
+about rpm
+
+The Red Hat package manager can be used on the command line with rpm or in a graphical way going to Applications--System Settings--Add/Remove Applications. Type rpm --help to see some of the options.
+
+Software distributed in the rpm format will be named foo-version.platform.rpm .
+
+rpm -qa
+
+To obtain a list of all installed software, use the rpm -qa command.
+
+[root@RHEL52 ~]# rpm -qa | grep samba
+system-config-samba-1.2.39-1.el5
+samba-3.0.28-1.el5_2.1
+samba-client-3.0.28-1.el5_2.1
+samba-common-3.0.28-1.el5_2.1
+rpm -q
+
+To verify whether one package is installed, use rpm -q.
+
+root@RHELv4u4:~# rpm -q gcc
+gcc-3.4.6-3
+root@RHELv4u4:~# rpm -q laika
+package laika is not installed
+rpm -Uvh
+
+To install or upgrade a package, use the -Uvh switches. The -U switch is the same as -i for install, except that older versions of the software are removed. The -vh switches are for nicer output.
+
+root@RHELv4u4:~# rpm -Uvh gcc-3.4.6-3
+rpm -e
+
+To remove a package, use the -e switch.
+
+root@RHELv4u4:~# rpm -e gcc-3.4.6-3
+rpm -e verifies dependencies, and thus will prevent you from accidentailly erasing packages that are needed by other packages.
+
+[root@RHEL52 ~]# rpm -e gcc-4.1.2-42.el5
+error: Failed dependencies:
+gcc = 4.1.2-42.el5 is needed by (installed) gcc-c++-4.1.2-42.el5.i386
+gcc = 4.1.2-42.el5 is needed by (installed) gcc-gfortran-4.1.2-42.el5.i386
+gcc is needed by (installed) systemtap-0.6.2-1.el5_2.2.i386
+/var/lib/rpm
+
+The rpm database is located at /var/lib/rpm. This database contains all meta information about packages that are installed (via rpm). It keeps track of all files, which enables complete removes of software.
+
+rpm2cpio
+
+We can use rpm2cpio to convert an rpm to a cpio archive.
+
+[root@RHEL53 ~]# file kernel.src.rpm 
+kernel.src.rpm: RPM v3 src PowerPC kernel-2.6.18-92.1.13.el5
+[root@RHEL53 ~]# rpm2cpio kernel.src.rpm > kernel.cpio
+[root@RHEL53 ~]# file kernel.cpio 
+kernel.cpio: ASCII cpio archive (SVR4 with no CRC)
+But why would you want to do this ?
+
+Perhaps just to see of list of files in the rpm file.
+
+[root@RHEL53 ~]# rpm2cpio kernel.src.rpm | cpio -t | head -5
+COPYING.modules
+Config.mk
+Module.kabi_i686
+Module.kabi_i686PAE
+Module.kabi_i686xen
+Or to extract one file from an rpm package.
+
+[root@RHEL53 ~]# rpm2cpio kernel.src.rpm | cpio -iv Config.mk
+Config.mk
+246098 blocks
+yum
+
+about yum
+
+The Yellowdog Updater, Modified (yum) is an easier command to work with rpm packages. It is installed by default on Fedora and Red Hat Enterprise Linux since version 5.2.
+
+yum list
+
+Issue yum list available to see a list of available packages. The available parameter is optional.
+
+root@rhel65:/etc# yum list | wc -l
+This system is receiving updates from Red Hat Subscription Management.
+3935
+root@rhel65:/etc#
+Issue yum list $package to get all versions (in different repositories) of one package.
+
+[root@rhel55 ~]# yum list samba
+Loaded plugins: rhnplugin, security
+Installed Packages
+samba.i386                 3.0.33-3.28.el5         installed         
+Available Packages
+samba.i386                 3.0.33-3.29.el5_5       rhel-i386-server-5
+yum search
+
+To search for a package containing a certain string in the description or name use yum search $string.
+
+[root@rhel55 ~]# yum search gcc44
+Loaded plugins: rhnplugin, security
+========================== Matched: gcc44 ===========================
+gcc44.i386 : Preview of GCC version 4.4
+gcc44-c++.i386 : C++ support for GCC version 4.4
+gcc44-gfortran.i386 : Fortran support for GCC 4.4 previe
+yum provides
+
+To search for a package containing a certain file (you might need for compiling things) use yum provides $filename.
+
+root@rhel65:/etc# yum provides /usr/share/man/man5/passwd.5.gz
+Loaded plugins: product-id, subscription-manager
+This system is receiving updates from Red Hat Subscription Management.
+rhel-6-server-cf-tools-1-rpms                                 | 2.8 kB     00:00
+rhel-6-server-rpms                                            | 3.7 kB     00:00
+man-pages-3.22-12.el6.noarch : Man (manual) pages from the Linux Documenta...
+Repo        : rhel-6-server-rpms
+Matched from:
+Filename    : /usr/share/man/man5/passwd.5.gz
+
+
+
+man-pages-3.22-20.el6.noarch : Man (manual) pages from the Linux Documenta...
+Repo        : rhel-6-server-rpms
+Matched from:
+Filename    : /usr/share/man/man5/passwd.5.gz
+
+
+
+man-pages-3.22-17.el6.noarch : Man (manual) pages from the Linux Documenta...
+Repo        : rhel-6-server-rpms
+Matched from:
+Filename    : /usr/share/man/man5/passwd.5.gz
+
+
+
+man-pages-3.22-20.el6.noarch : Man (manual) pages from the Linux Documenta...
+Repo        : installed
+Matched from:
+Other       : Provides-match: /usr/share/man/man5/passwd.5.gz
+
+
+
+root@rhel65:/etc#
+yum install
+
+To install an application, use yum install $package. Naturally yum will install all the necessary dependencies.
+
+[root@rhel55 ~]# yum install sudo
+Loaded plugins: rhnplugin, security
+Setting up Install Process
+Resolving Dependencies
+--> Running transaction check
+---> Package sudo.i386 0:1.7.2p1-7.el5_5 set to be updated
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=======================================================================
+ Package     Arch      Version            Repository               Size
+=======================================================================
+Installing:
+ sudo        i386      1.7.2p1-7.el5_5    rhel-i386-server-5      230 k
+
+Transaction Summary
+=======================================================================
+Install       1 Package(s)
+Upgrade       0 Package(s)
+
+Total download size: 230 k
+Is this ok [y/N]: y
+Downloading Packages:
+sudo-1.7.2p1-7.el5_5.i386.rpm                       | 230 kB     00:00 
+Running rpm_check_debug
+Running Transaction Test
+Finished Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing     : sudo                                        1/1 
+
+Installed:
+  sudo.i386 0:1.7.2p1-7.el5_5
+
+Complete!  
+You can add more than one parameter here.
+
+yum install $package1 $package2 $package3
+yum update
+
+To bring all applications up to date, by downloading and installing them, issue yum update. All software that was installed via yum will be updated to the latest version that is available in the repository.
+
+yum update
+If you only want to update one package, use yum update $package.
+
+[root@rhel55 ~]# yum update sudo
+Loaded plugins: rhnplugin, security
+Skipping security plugin, no data
+Setting up Update Process
+Resolving Dependencies
+Skipping security plugin, no data
+--> Running transaction check
+---> Package sudo.i386 0:1.7.2p1-7.el5_5 set to be updated
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=====================================================================
+ Package     Arch    Version           Repository                Size
+=====================================================================
+Updating:
+ sudo        i386    1.7.2p1-7.el5_5   rhel-i386-server-5       230 k
+
+Transaction Summary
+=====================================================================
+Install       0 Package(s)
+Upgrade       1 Package(s)
+
+Total download size: 230 k
+Is this ok [y/N]: y
+Downloading Packages:
+sudo-1.7.2p1-7.el5_5.i386.rpm                      | 230 kB     00:00 
+Running rpm_check_debug
+Running Transaction Test
+Finished Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Updating       : sudo                                           1/2
+  Cleanup        : sudo                                           2/2
+
+Updated:
+  sudo.i386 0:1.7.2p1-7.el5_5
+
+Complete!
+yum software groups
+
+Issue yum grouplist to see a list of all available software groups.
+
+[root@rhel55 ~]# yum grouplist
+Loaded plugins: rhnplugin, security
+Setting up Group Process
+Installed Groups:
+   Administration Tools
+   Authoring and Publishing
+   DNS Name Server
+   Development Libraries
+   Development Tools
+   Editors
+   GNOME Desktop Environment
+   GNOME Software Development
+   Graphical Internet
+   Graphics
+   Legacy Network Server
+   Legacy Software Development
+   Legacy Software Support
+   Mail Server
+   Network Servers
+   Office/Productivity
+   Printing Support
+   Server Configuration Tools
+   System Tools
+   Text-based Internet
+   Web Server
+   Windows File Server
+   X Software Development
+   X Window System
+Available Groups:
+   Engineering and Scientific
+   FTP Server
+   Games and Entertainment
+   Java Development
+   KDE (K Desktop Environment)
+   KDE Software Development
+   MySQL Database
+   News Server
+   OpenFabrics Enterprise Distribution
+   PostgreSQL Database
+   Sound and Video
+Done
+To install a set of applications, brought together via a group, use yum groupinstall $groupname.
+
+[root@rhel55 ~]# yum groupinstall 'Sound and video'
+Loaded plugins: rhnplugin, security
+Setting up Group Process
+Package alsa-utils-1.0.17-1.el5.i386 already installed and latest version
+Package sox-12.18.1-1.i386 already installed and latest version
+Package 9:mkisofs-2.01-10.7.el5.i386 already installed and latest version
+Package 9:cdrecord-2.01-10.7.el5.i386 already installed and latest version
+Package cdrdao-1.2.1-2.i386 already installed and latest version
+Resolving Dependencies
+--> Running transaction check
+---> Package cdda2wav.i386 9:2.01-10.7.el5 set to be updated
+---> Package cdparanoia.i386 0:alpha9.8-27.2 set to be updated
+---> Package sound-juicer.i386 0:2.16.0-3.el5 set to be updated
+--> Processing Dependency: libmusicbrainz >= 2.1.0 for package: sound-juicer
+--> Processing Dependency: libmusicbrainz.so.4 for package: sound-juicer
+---> Package vorbis-tools.i386 1:1.1.1-3.el5 set to be updated
+--> Processing Dependency: libao >= 0.8.4 for package: vorbis-tools
+--> Processing Dependency: libao.so.2 for package: vorbis-tools
+--> Running transaction check
+---> Package libao.i386 0:0.8.6-7 set to be updated
+---> Package libmusicbrainz.i386 0:2.1.1-4.1 set to be updated
+--> Finished Dependency Resolution
+...
+Read the manual page of yum for more information about managing groups in yum.
+
+/etc/yum.conf and repositories
+
+The configuration of yum repositories is done in /etc/yum/yum.conf and /etc/yum/repos.d/.
+
+Configurating yum itself is done in /etc/yum.conf. This file will contain the location of a log file and a cache directory for yum and can also contain a list of repositories.
+
+Recently yum started accepting several repo files with each file containing a list of repositories. These repo files are located in the /etc/yum.repos.d/ directory.
+
+One important flag for yum is enablerepo. Use this command if you want to use a repository that is not enabled by default.
+
+yum $command $foo --enablerepo=$repo
+An example of the contents of the repo file: MyRepo.repo
+
+[$repo]
+name=My Repository
+baseurl=http://path/to/MyRepo
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-MyRep
+alien
+
+alien is experimental software that converts between rpm and deb package formats (and others).
+
+Below an example of how to use alien to convert an rpm package to a deb package.
+
+paul@barry:~$ ls -l netcat*
+-rw-r--r-- 1 paul paul 123912 2009-06-04 14:58 netcat-0.7.1-1.i386.rpm
+paul@barry:~$ alien --to-deb netcat-0.7.1-1.i386.rpm 
+netcat_0.7.1-2_i386.deb generated
+paul@barry:~$ ls -l netcat*
+-rw-r--r-- 1 paul paul 123912 2009-06-04 14:58 netcat-0.7.1-1.i386.rpm
+-rw-r--r-- 1 root root 125236 2009-06-04 14:59 netcat_0.7.1-2_i386.deb
+In real life, use the netcat tool provided by your distribution, or use the .deb file from their website.
+
+downloading software outside the repository
+
+First and most important, whenever you download software, start by reading the README file!
+
+Normally the readme will explain what to do after download. You will probably receive a .tar.gz or a .tgz file. Read the documentation, then put the compressed file in a directory. You can use the following to find out where the package wants to install.
+
+tar tvzpf $downloadedFile.tgz
+You unpack them like with tar xzf, it will create a directory called applicationName-1.2.3
+
+tar xzf $applicationName.tgz
+Replace the z with a j when the file ends in .tar.bz2. The tar, gzip and bzip2 commands are explained in detail in the Linux Fundamentals course.
+
+If you download a .deb file, then you'll have to use dpkg to install it, .rpm's can be installed with the rpm command.
+
+compiling software
+
+First and most important, whenever you download source code for installation, start by reading the README file!
+
+Usually the steps are always the same three : running ./configure followed by make (which is the actual compiling) and then by make install to copy the files to their proper location.
+
+./configure
+make
+make install
+practice: package management
+
+1. Verify whether gcc, sudo and wesnoth are installed.
+
+2. Use yum or aptitude to search for and install the scp, tmux, and man-pages packages. Did you find them all ?
+
+3. Search the internet for 'webmin' and figure out how to install it.
+
+4. If time permits, search for and install samba including the samba docs pdf files (thousands of pages in two pdf's).
+
+solution: package management
+
+1. Verify whether gcc, sudo and wesnoth are installed.
+
+On Red Hat/CentOS:
+rpm -qa | grep gcc
+rpm -qa | grep sudo
+rpm -qa | grep wesnoth
+On Debian/Ubuntu:
+dpkg -l | grep gcc
+dpkg -l | grep sudo
+dpkg -l | grep wesnoth
+2. Use yum or aptitude to search for and install the scp, tmux, and man-pages packages. Did you find them all ?
+
+On Red Hat/CentOS:
+yum search scp
+yum search tmux
+yum search man-pages
+On Debian/Ubuntu:
+aptitude search scp
+aptitude search tmux
+aptitude search man-pages
+3. Search the internet for 'webmin' and figure out how to install it.
+
+Google should point you to webmin.com.
+There are several formats available there choose .rpm, .deb or .tgz .
+4. If time permits, search for and install samba including the samba docs pdf files (thousands of pages in two pdf's).
